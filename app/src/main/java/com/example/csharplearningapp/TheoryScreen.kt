@@ -28,11 +28,14 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.csharplearningapp.data.LessonData
+import com.example.csharplearningapp.data.LessonsRepository
 import com.example.csharplearningapp.data.TheoryStep
 import com.example.csharplearningapp.ui.theme.AppAccent
 import com.example.csharplearningapp.ui.theme.AppAccent2
@@ -41,6 +44,7 @@ import com.example.csharplearningapp.ui.theme.AppMuted
 import com.example.csharplearningapp.ui.theme.AppSurface
 import com.example.csharplearningapp.ui.theme.AppText
 import com.example.csharplearningapp.ui.theme.CSharpLearningAppTheme
+import com.example.csharplearningapp.ui.theme.SynComment
 import com.example.csharplearningapp.ui.theme.SynFunc
 import com.example.csharplearningapp.ui.theme.SynKeyword
 import com.example.csharplearningapp.ui.theme.SynNumber
@@ -58,8 +62,8 @@ fun DynamicTheoryScreen(
         containerColor = AppBg,
         topBar = {
             TheoryTopBar(
-                currentLesson = 3,
-                totalLessons = 5,
+                currentLesson = lesson.id,
+                totalLessons = LessonsRepository.topics.size,
                 onBackClick = onBackClick,
             )
         },
@@ -98,7 +102,7 @@ fun DynamicTheoryScreen(
                     }
                     is TheoryStep.SubHeader -> {
                         TheoryHeader(title = step.title, description = "", titleSize = 22)
-                        Spacer(modifier = Modifier.height(12.dp))
+                        // Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
             }
@@ -106,96 +110,6 @@ fun DynamicTheoryScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             TheoryBottomBar(onStartTestClick = onStartTestClick)
-        }
-    }
-}
-
-@Composable
-fun TheoryScreen(
-    onBackClick: () -> Unit,
-    onSaveClick: () -> Unit,
-    onStartTestClick: () -> Unit
-) {
-    Scaffold(
-        containerColor = AppBg,
-        topBar = {
-            TheoryTopBar(
-                currentLesson = 3,
-                totalLessons = 5,
-                onBackClick = onBackClick,
-            )
-        },
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 10.dp)
-        ) {
-            // Заголовок урока
-            TheoryHeader(
-                title = "Условия и ветвления",
-                description = "Научим программу принимать решения в зависимости от входных данных."
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Раздел 1: if/else
-            LessonText("Конструкция ")
-            LessonTextWithCode("if-else", " позволяет выполнять разный код при разных условиях. Это основа любой логики.")
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                TheoryListItem(
-                    number = "1",
-                    boldText = "if",
-                    normalText = " — выполняется, если условие истинно (true)."
-                )
-                TheoryListItem(
-                    number = "2",
-                    boldText = "else if",
-                    normalText = " — проверяется, если первый if оказался ложным (false)."
-                )
-                TheoryListItem(
-                    number = "3",
-                    boldText = "else",
-                    normalText = " — блок по умолчанию. Сработает, если ни одно условие выше не подошло."
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Первый блок кода
-            CodeCard(
-                lang = "C# • Пример",
-                codeText = buildIfElseCodeSnippet()
-            )
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Раздел 2: switch
-            TheoryHeader(
-                title = "Оператор switch",
-                description = "Если вам нужно проверить одну переменную на множество конкретных значений, удобнее использовать switch вместо десятка else if.",
-                titleSize = 22
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Второй блок кода
-            CodeCard(
-                lang = "C# • Пример",
-                codeText = buildSwitchCodeSnippet()
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            TheoryBottomBar(onStartTestClick = onStartTestClick)
-
-            // Отступ снизу, чтобы контент не перекрывался нижней панелью при максимальном скролле
-            Spacer(modifier = Modifier.height(40.dp))
         }
     }
 }
@@ -259,12 +173,14 @@ fun TheoryHeader(title: String, description: String, titleSize: Int = 28) {
             lineHeight = 34.sp
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = description,
-            color = AppMuted,
-            fontSize = 15.sp,
-            lineHeight = 22.sp
-        )
+        if (description.isNotEmpty()){
+            Text(
+                text = description,
+                color = AppMuted,
+                fontSize = 15.sp,
+                lineHeight = 22.sp
+            )
+        }
     }
 }
 
@@ -331,6 +247,10 @@ fun TheoryListItem(number: String, boldText: String, normalText: String) {
 
 @Composable
 fun CodeCard(lang: String, codeText: AnnotatedString) {
+//    val highlightedText = remember(codeText) {
+//
+//    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -355,7 +275,7 @@ fun CodeCard(lang: String, codeText: AnnotatedString) {
                 letterSpacing = 0.05.sp
             )
             IconButton(onClick = { /* Копирование в буфер */ }, modifier = Modifier.size(20.dp)) {
-                Icon(Icons.Default.Add, contentDescription = "Копировать", tint = AppMuted, modifier = Modifier.size(14.dp))
+                Icon(Icons.Outlined.Edit, contentDescription = "Копировать", tint = AppMuted, modifier = Modifier.size(14.dp))
             }
         }
 
@@ -491,6 +411,55 @@ fun buildSwitchCodeSnippet() = buildAnnotatedString {
     append(";\n}")
 }
 
+fun String.highlightSyntax(): AnnotatedString {
+    val code = this
+
+    // Определяем паттерны для C#
+    val keywords = listOf("if", "else", "switch", "case", "break", "default", "return", "new", "using", "public", "private", "class")
+    val types = listOf("int", "string", "bool", "void", "var", "float", "double", "long")
+
+    // Регулярные выражения для разных элементов
+    val pattern = Regex(
+        """(?<KEYWORD>\b(${keywords.joinToString("|")})\b)""" +
+                """|(?<TYPE>\b(${types.joinToString("|")})\b)""" +
+                """|(?<STRING>".*?")""" +
+                """|(?<NUMBER>\b\d+\b)""" +
+                """|(?<COMMENT>//.*)""" +
+                """|(?<FUNCTION>\b\w+(?=\s*\())""" // Слово, после которого идет скобка
+    )
+
+    return buildAnnotatedString {
+        var lastIndex = 0
+
+        pattern.findAll(code).forEach { match ->
+            // Добавляем обычный текст до найденного совпадения
+            append(code.substring(lastIndex, match.range.first))
+
+            // Определяем, какую группу мы нашли, и применяем стиль
+            val style = when {
+                match.groups["KEYWORD"] != null -> SpanStyle(color = SynKeyword)
+                match.groups["TYPE"] != null -> SpanStyle(color = SynType)
+                match.groups["STRING"] != null -> SpanStyle(color = SynString)
+                match.groups["NUMBER"] != null -> SpanStyle(color = SynNumber)
+                match.groups["COMMENT"] != null -> SpanStyle(color = SynComment)
+                match.groups["FUNCTION"] != null -> SpanStyle(color = SynFunc)
+                else -> SpanStyle(color = AppText)
+            }
+
+            withStyle(style) {
+                append(match.value)
+            }
+
+            lastIndex = match.range.last + 1
+        }
+
+        // Добавляем оставшийся текст после последнего совпадения
+        if (lastIndex < code.length) {
+            append(code.substring(lastIndex))
+        }
+    }
+}
+
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun TheoryPreview() {
@@ -509,7 +478,13 @@ fun TheoryPreview() {
 
             TheoryStep.CodeSnippet(
                 lang = "C# • Пример if-else",
-                code = buildIfElseCodeSnippet()
+                code = """
+        int age = 18;
+        
+        if (age >= 18) {
+            Console.WriteLine("Доступ разрешен");
+        }
+    """.trimIndent().highlightSyntax()
             ),
 
             TheoryStep.SubHeader("Оператор switch"),

@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -57,6 +58,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.csharplearningapp.data.QuizOption
 import com.example.csharplearningapp.data.QuizQuestion
 import com.example.csharplearningapp.data.QuizUiState
@@ -75,7 +78,8 @@ import com.example.csharplearningapp.ui.theme.CSharpLearningAppTheme
 fun QuizScreen(
     state: QuizUiState,
     onOptionSelect: (String) -> Unit,
-    onNextClick: () -> Unit
+    onNextClick: () -> Unit,
+    navController: NavController
 ) {
     Scaffold(
         containerColor = AppBg,
@@ -83,7 +87,8 @@ fun QuizScreen(
             QuizTopNav(
                 current = state.currentQuestion.id,
                 total = 5,
-                time = state.timeLeft
+                time = state.timeLeft,
+                onBackClick = {navController.popBackStack()}
             )
         }
     ) { padding ->
@@ -278,7 +283,8 @@ fun QuizTopNav(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 14.dp),
+            .padding(horizontal = 20.dp, vertical = 14.dp)
+            .statusBarsPadding(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -485,7 +491,8 @@ fun QuizPreview() {
         QuizScreen(
             state = unansweredState,
             onOptionSelect = {},
-            onNextClick = {}
+            onNextClick = {},
+            rememberNavController()
         )
     }
 }

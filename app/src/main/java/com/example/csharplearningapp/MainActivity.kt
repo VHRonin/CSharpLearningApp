@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -28,6 +30,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -46,8 +49,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.csharplearningapp.data.LessonData
+import com.example.csharplearningapp.data.LessonsRepository
 import com.example.csharplearningapp.data.TheoryStep
+import com.example.csharplearningapp.navigation.AppNavHost
+import com.example.csharplearningapp.navigation.Screen
 import com.example.csharplearningapp.ui.theme.CSharpLearningAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -55,39 +63,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val lesson3 = LessonData(
-                id = 3,
-                title = "Условия и ветвления",
-                subtitle = "Научим программу принимать решения в зависимости от входных данных.",
-                steps = listOf(
-                    TheoryStep.Text("Конструкция if-else позволяет выполнять разный код при разных условиях. Это основа любой логики."),
-
-                    TheoryStep.BulletList(listOf(
-                        "if" to " — выполняется, если условие истинно (true).",
-                        "else if" to " — проверяется, если первый if оказался ложным (false).",
-                        "else" to " — блок по умолчанию. Сработает, если ни одно условие выше не подошло."
-                    )),
-
-                    TheoryStep.CodeSnippet(
-                        lang = "C# • Пример if-else",
-                        code = buildIfElseCodeSnippet()
-                    ),
-
-                    TheoryStep.SubHeader("Оператор switch"),
-
-                    TheoryStep.Text("Если вам нужно проверить одну переменную на множество конкретных значений, удобнее использовать switch вместо десятка else if."),
-
-                    TheoryStep.CodeSnippet(
-                        lang = "C# • Пример switch",
-                        code = buildSwitchCodeSnippet()
-                    )
-                )
-            )
+            val navController = rememberNavController()
 
             CSharpLearningAppTheme {
-                DynamicTheoryScreen(onBackClick = {},
-                    lesson = lesson3,
-                    onStartTestClick = {})
+                AppNavHost(navController)
             }
         }
     }
@@ -98,40 +77,49 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun GreetingPreview() {
     CSharpLearningAppTheme {
-        CSharpLearningScreen()
+        CSharpLearningScreen(rememberNavController())
     }
 }
 
 
 @Composable
-fun CSharpLearningScreen() {
+fun CSharpLearningScreen(navController: NavController) {
     val scrollState = rememberScrollState()
+    val topics = LessonsRepository.topics
 
-    Box(
-        modifier = Modifier
+    Scaffold(modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF090B10))
-    ) {
-        Column(
+        .background(Color(0xFF090B10))
+        .statusBarsPadding()) { innerPadding ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(bottom = 100.dp) // место под кнопку
+                .padding(innerPadding)
+                .background(Color(0xFF090B10))
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(bottom = 100.dp) // место под кнопку
+            ) {
 
-            // Header
-            HeaderSection()
+                // Header
+                HeaderSection()
 
-            // Progress Card
-            ProgressCard()
+                // Progress Card
+                ProgressCard()
 
-            // Topics Section
-            TopicsSection()
+                // Topics Section
+                TopicsSection(navController, topics)
+            }
+
+            // Bottom CTA
+            BottomCTAButton(Modifier.align(Alignment.BottomCenter), navController)
         }
-
-        // Bottom CTA
-        BottomCTAButton(Modifier.align(Alignment.BottomCenter))
     }
+
+
 }
 
 // ==================== HEADER ====================
@@ -180,6 +168,10 @@ private fun HeaderSection() {
 // ==================== PROGRESS CARD ====================
 @Composable
 private fun ProgressCard() {
+    val doneThemesCount = LessonsRepository.topics.count { it.isDone }
+    val lessonDuration = 5
+    val remainingTopics = LessonsRepository.topics.size - doneThemesCount
+    val doneTopicsPercent = doneThemesCount / LessonsRepository.topics.size
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -207,9 +199,9 @@ private fun ProgressCard() {
             ) {
                 Text(
                     text = buildAnnotatedString {
-                        append("2 ")
+                        append("${doneThemesCount} ")
                         withStyle(SpanStyle(fontSize = 18.sp, color = Color(0xFF7B82A0))) {
-                            append("/ 5 тем")
+                            append("/ ${LessonsRepository.topics.size} тем")
                         }
                     },
                     fontSize = 36.sp,
@@ -228,7 +220,7 @@ private fun ProgressCard() {
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "40%",
+                        text = "${doneThemesCount / LessonsRepository.topics.size * 100}%",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         fontFamily = FontFamily.Monospace,
@@ -248,7 +240,7 @@ private fun ProgressCard() {
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.4f)
+                        .fillMaxWidth(if (doneTopicsPercent == 0) 0.05f else remainingTopics.toFloat())
                         .height(8.dp)
                         .background(
                             brush = Brush.horizontalGradient(
@@ -263,7 +255,11 @@ private fun ProgressCard() {
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = "Осталось 3 темы · ~45 мин",
+                text = when (remainingTopics){
+                    1 -> "Осталось ${remainingTopics} тема · ~${lessonDuration * remainingTopics} мин"
+                    in 2..4 -> "Осталось ${remainingTopics} темы · ~${lessonDuration * remainingTopics} мин"
+                    else -> "Осталось ${remainingTopics} тем · ~${lessonDuration * remainingTopics} мин"
+                },
                 fontSize = 12.sp,
                 color = Color(0xFF7B82A0)
             )
@@ -273,7 +269,7 @@ private fun ProgressCard() {
 
 // ==================== TOPICS ====================
 @Composable
-private fun TopicsSection() {
+private fun TopicsSection(navController: NavController, topics: List<Topic>) {
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         Row(
             modifier = Modifier
@@ -288,43 +284,37 @@ private fun TopicsSection() {
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
-            Text(
-                text = "Все темы →",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFFA688FF)
-            )
+//            Text(
+//                text = "Все темы →",
+//                fontSize = 12.sp,
+//                fontWeight = FontWeight.Medium,
+//                color = Color(0xFFA688FF)
+//            )
         }
 
-        val topics = listOf(
-            Topic("Переменные", "Типы данных, объявление, int, string, bool", true, false),
-            Topic("Циклы", "for, while, foreach — итерации по данным", true, false),
-            Topic("Условия", "if / else, switch — ветвление логики", false, true),
-            Topic("Массивы", "Коллекции, List<T>, индексы, перебор", false, false),
-            Topic("Классы", "ООП, поля, методы, наследование", false, false),
-        )
-
         topics.forEach { topic ->
-            TopicCard(topic)
+            TopicCard(topic, navController)
             Spacer(Modifier.height(10.dp))
         }
     }
 }
 
 data class Topic(
-    val title: String,
-    val desc: String,
+    val lessonData: LessonData,
     val isDone: Boolean,
-    val isActive: Boolean
+    val isActive: Boolean,
+    val icon: Int
 )
 
 @Composable
-private fun TopicCard(topic: Topic) {
+private fun TopicCard(topic: Topic, navController: NavController) {
     val isDone = topic.isDone
     val isActive = topic.isActive
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable{
+            if (isActive || isDone) navController.navigate(Screen.Theory.createRoute(topic.lessonData.id))
+        },
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isActive) Color(0xFF1C2030) else Color(0xFF141720)
@@ -354,15 +344,7 @@ private fun TopicCard(topic: Topic) {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(
-                        when (topic.title) {
-                            "Переменные" -> R.drawable.ic_variables // создай иконки или используй Material
-                            "Циклы" -> R.drawable.ic_loops
-                            "Условия" -> R.drawable.ic_conditions
-                            "Массивы" -> R.drawable.ic_arrays
-                            else -> R.drawable.ic_classes
-                        }
-                    ),
+                    painter = painterResource(topic.icon),
                     contentDescription = null,
                     tint = if (isDone) Color(0xFF3ECF8E) else Color(0xFFA688FF),
                     modifier = Modifier.size(22.dp)
@@ -373,13 +355,13 @@ private fun TopicCard(topic: Topic) {
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = topic.title,
+                    text = topic.lessonData.title,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
                 Text(
-                    text = topic.desc,
+                    text = topic.lessonData.subtitle,
                     fontSize = 12.sp,
                     color = Color(0xFF7B82A0),
                     maxLines = 1,
@@ -432,7 +414,7 @@ private fun TopicCard(topic: Topic) {
 
 // ==================== BOTTOM BUTTON ====================
 @Composable
-private fun BottomCTAButton(modifier: Modifier = Modifier) {
+private fun BottomCTAButton(modifier: Modifier = Modifier, navController: NavController) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -446,7 +428,7 @@ private fun BottomCTAButton(modifier: Modifier = Modifier) {
             .padding(horizontal = 20.dp, vertical = 32.dp)
     ) {
         Button(
-            onClick = { /* TODO */ },
+            onClick = { navController.navigate(Screen.Quiz.route) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
