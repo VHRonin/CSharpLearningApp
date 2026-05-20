@@ -1,5 +1,9 @@
 package com.example.csharplearningapp.data
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class ResultUiState(
     val score: Int,
     val totalQuestions: Int,
@@ -7,4 +11,4 @@ data class ResultUiState(
     val title: String,    // например, "Отличная работа!"
     val description: String,
     val accuracyPercentage: Int
-)
+) : Parcelable

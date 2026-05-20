@@ -1,13 +1,16 @@
 package com.example.csharplearningapp.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.csharplearningapp.CSharpLearningScreen
 import com.example.csharplearningapp.DynamicTheoryScreen
+import com.example.csharplearningapp.QuizRoute
 import com.example.csharplearningapp.QuizScreen
+import com.example.csharplearningapp.ResultRoute
 import com.example.csharplearningapp.ResultScreen
 import com.example.csharplearningapp.buildIfElseCodeSnippet
 import com.example.csharplearningapp.buildSwitchCodeSnippet
@@ -19,32 +22,33 @@ import com.example.csharplearningapp.data.QuizUiState
 import com.example.csharplearningapp.data.ResultUiState
 import com.example.csharplearningapp.data.TheoryStep
 import com.example.csharplearningapp.highlightSyntax
+import com.example.csharplearningapp.viewmodel.QuizViewModel
 
 @Composable
 fun AppNavHost(navController: NavHostController){
-    val question3 = QuizQuestion(
-        id = 3,
-        label = "Вопрос 3",
-        text = "Что выведет программа?",
-        codeSnippet = buildIfElseCodeSnippet(),
-        options = listOf(
-            QuizOption("opt_a", "A", "\"A\""),
-            QuizOption("opt_b", "B", "\"B\""),
-            QuizOption("opt_c", "C", "Ничего — ошибка компиляции"),
-            QuizOption("opt_d", "D", "\"A\" и \"B\"")
-        ),
-        correctOptionId = "opt_a",
-        feedbackCorrect = "x > 5 — истина, поэтому выполняется первая ветка",
-        feedbackWrong = "Правильный ответ: \"A\" — условие x > 5 выполняется"
-    )
-    // Состояние: вопрос отображен, но ответ еще не выбран
-    val unansweredState = QuizUiState(
-        currentQuestion = question3,
-        selectedOptionId = null,
-        isAnswered = false,
-        timeLeft = "0:42",
-        progress = listOf(true, true, false, false, false) // Первые два урока пройдены
-    )
+//    val question3 = QuizQuestion(
+//        id = 3,
+//        label = "Вопрос 3",
+//        text = "Что выведет программа?",
+//        codeSnippet = buildIfElseCodeSnippet(),
+//        options = listOf(
+//            QuizOption("opt_a", "A", "\"A\""),
+//            QuizOption("opt_b", "B", "\"B\""),
+//            QuizOption("opt_c", "C", "Ничего — ошибка компиляции"),
+//            QuizOption("opt_d", "D", "\"A\" и \"B\"")
+//        ),
+//        correctOptionId = "opt_a",
+//        feedbackCorrect = "x > 5 — истина, поэтому выполняется первая ветка",
+//        feedbackWrong = "Правильный ответ: \"A\" — условие x > 5 выполняется"
+//    )
+//    // Состояние: вопрос отображен, но ответ еще не выбран
+//    val unansweredState = QuizUiState(
+//        currentQuestion = question3,
+//        selectedOptionId = null,
+//        isAnswered = false,
+//        timeLeft = "0:42",
+//        progress = listOf(true, true, false, false, false) // Первые два урока пройдены
+//    )
 
     val mockResult = ResultUiState(
         score = 4,
@@ -64,11 +68,14 @@ fun AppNavHost(navController: NavHostController){
         }
 
         composable(route = Screen.Quiz.route) {
-            QuizScreen(unansweredState, {}, {}, navController)
+//            QuizScreen(unansweredState, {}, {}, navController)
+            QuizRoute(navController)
         }
 
         composable(route = Screen.Result.route) {
-            ResultScreen(mockResult, onRetryClick = {navController.navigate(Screen.Result.route)}, onHomeClick = {navController.navigate(Screen.Home.route)})
+//            ResultScreen(mockResult, onRetryClick = {navController.navigate(Screen.Quiz.route)}, onHomeClick = {navController.navigate(Screen.Home.route)})
+
+            ResultRoute(navController)
         }
 
         composable(route = Screen.Theory.route) { backStackEntry ->

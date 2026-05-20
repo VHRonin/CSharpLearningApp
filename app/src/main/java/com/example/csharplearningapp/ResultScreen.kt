@@ -23,6 +23,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,7 +37,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.csharplearningapp.data.ResultUiState
+import com.example.csharplearningapp.navigation.Screen
 import com.example.csharplearningapp.ui.theme.AppAccent
 import com.example.csharplearningapp.ui.theme.AppBg
 import com.example.csharplearningapp.ui.theme.AppBorder
@@ -43,7 +47,19 @@ import com.example.csharplearningapp.ui.theme.AppMuted
 import com.example.csharplearningapp.ui.theme.AppSurface
 import com.example.csharplearningapp.ui.theme.AppText
 import com.example.csharplearningapp.ui.theme.CSharpLearningAppTheme
+import com.example.csharplearningapp.viewmodel.QuizViewModel
 
+
+@Composable
+fun ResultRoute(navController: NavController){
+    val resultState = navController.previousBackStackEntry?.savedStateHandle?.get<ResultUiState>("result") ?: ResultUiState(0, 0, "", "", "", 0)
+
+    ResultScreen(
+        resultState,
+        onRetryClick = {navController.navigate(Screen.Quiz.route)},
+        onHomeClick = {navController.navigate(Screen.Home.route)}
+    )
+}
 @Composable
 fun ResultScreen(
     state: ResultUiState,

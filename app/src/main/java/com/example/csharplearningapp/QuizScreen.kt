@@ -1,5 +1,7 @@
 package com.example.csharplearningapp
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -41,7 +43,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -58,12 +63,14 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.csharplearningapp.data.QuizOption
 import com.example.csharplearningapp.data.QuizQuestion
 import com.example.csharplearningapp.data.QuizUiState
 import com.example.csharplearningapp.data.SelectionState
+import com.example.csharplearningapp.navigation.Screen
 import com.example.csharplearningapp.ui.theme.AppAccent
 import com.example.csharplearningapp.ui.theme.AppAccent2
 import com.example.csharplearningapp.ui.theme.AppBg
@@ -73,7 +80,51 @@ import com.example.csharplearningapp.ui.theme.AppSurface
 import com.example.csharplearningapp.ui.theme.AppSurface2
 import com.example.csharplearningapp.ui.theme.AppText
 import com.example.csharplearningapp.ui.theme.CSharpLearningAppTheme
+import com.example.csharplearningapp.viewmodel.QuizViewModel
 
+
+@Composable
+fun QuizRoute(navController: NavController){
+
+    val viewModel: QuizViewModel = viewModel()
+
+    val state by viewModel.uiState.collectAsState()
+//    val sessionState by viewModel.state.collectAsState()
+//    val resultState by viewModel.resultUiState.collectAsState()
+//    val currentResult by rememberUpdatedState(resultState)
+
+//    LaunchedEffect(sessionState.isQuizFinished) {
+//        if (sessionState.isQuizFinished){
+//
+////            Log.d("ye", resultState.toString())
+//            navController.currentBackStackEntry?.savedStateHandle?.set("result", currentResult)
+//            navController.navigate(Screen.Result.route)
+//        }
+//    }
+
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvent.collect{ result ->
+
+//            Log.d("ye", resultState.toString())
+            navController.currentBackStackEntry?.savedStateHandle?.set("result", result)
+            navController.navigate(Screen.Result.route)
+        }
+    }
+
+    QuizScreen(
+        state = state,
+
+        onOptionSelect = {
+            viewModel.selectOption(it)
+        },
+
+        onNextClick = {
+            viewModel.nextQuestion()
+        },
+
+        navController = navController
+    )
+}
 @Composable
 fun QuizScreen(
     state: QuizUiState,
