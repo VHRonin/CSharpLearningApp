@@ -56,7 +56,8 @@ fun AppNavHost(navController: NavHostController){
         timeSpent = "2:45",
         title = "Отличная работа!",
         description = "Ты почти мастер в условиях C#. Еще пара повторений и теория будет отскакивать от зубов.",
-        accuracyPercentage = 80
+        accuracyPercentage = 80,
+        lessonId = 0
     )
 
     NavHost(
@@ -67,9 +68,13 @@ fun AppNavHost(navController: NavHostController){
             CSharpLearningScreen(navController)
         }
 
-        composable(route = Screen.Quiz.route) {
+        composable(route = Screen.Quiz.route) { backStackEntry ->
 //            QuizScreen(unansweredState, {}, {}, navController)
-            QuizRoute(navController)
+            val lessonId = backStackEntry.arguments?.getString("lessonId")?.toIntOrNull()
+
+            lessonId?.let {
+                QuizRoute(navController, it)
+            }
         }
 
         composable(route = Screen.Result.route) {
@@ -87,7 +92,7 @@ fun AppNavHost(navController: NavHostController){
             lesson?.let {
                 DynamicTheoryScreen(
                     onBackClick = {navController.popBackStack()},
-                    onStartTestClick = {navController.navigate(Screen.Quiz.route)},
+                    onStartTestClick = {navController.navigate(Screen.Quiz.createRoute(lessonId ?: 1))},
                     lesson = it
                 )
             }

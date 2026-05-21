@@ -46,7 +46,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -81,26 +84,15 @@ import com.example.csharplearningapp.ui.theme.AppSurface2
 import com.example.csharplearningapp.ui.theme.AppText
 import com.example.csharplearningapp.ui.theme.CSharpLearningAppTheme
 import com.example.csharplearningapp.viewmodel.QuizViewModel
+import com.example.csharplearningapp.viewmodel.QuizViewModelFactory
 
 
 @Composable
-fun QuizRoute(navController: NavController){
+fun QuizRoute(navController: NavController, lessonId: Int){
 
-    val viewModel: QuizViewModel = viewModel()
+    val viewModel: QuizViewModel = viewModel(factory = QuizViewModelFactory(lessonId))
 
     val state by viewModel.uiState.collectAsState()
-//    val sessionState by viewModel.state.collectAsState()
-//    val resultState by viewModel.resultUiState.collectAsState()
-//    val currentResult by rememberUpdatedState(resultState)
-
-//    LaunchedEffect(sessionState.isQuizFinished) {
-//        if (sessionState.isQuizFinished){
-//
-////            Log.d("ye", resultState.toString())
-//            navController.currentBackStackEntry?.savedStateHandle?.set("result", currentResult)
-//            navController.navigate(Screen.Result.route)
-//        }
-//    }
 
     LaunchedEffect(Unit) {
         viewModel.navigationEvent.collect{ result ->
@@ -202,12 +194,20 @@ fun QuizScreen(
                     Spacer(modifier = Modifier.height(10.dp))
                 }
 
+                var capturedIsCorrect by remember{ mutableStateOf(false) }
+                var capturedText by remember { mutableStateOf("") }
+
+                if (state.isAnswered){
+                    val isCorrect = state.selectedOptionId == state.currentQuestion.correctOptionId
+                    capturedIsCorrect = isCorrect
+                    capturedText = if (isCorrect) state.currentQuestion.feedbackCorrect else state.currentQuestion.feedbackWrong
+                }
                 // Фидбек (появляется после ответа)
                 AnimatedVisibility(visible = state.isAnswered) {
-                    val isCorrect = state.selectedOptionId == state.currentQuestion.correctOptionId
+
                     FeedbackStrip(
-                        isCorrect = isCorrect,
-                        text = if (isCorrect) state.currentQuestion.feedbackCorrect else state.currentQuestion.feedbackWrong
+                        isCorrect = capturedIsCorrect,
+                        text = capturedText
                     )
                 }
             }

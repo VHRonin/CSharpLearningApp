@@ -1,6 +1,7 @@
 package com.example.csharplearningapp
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -62,6 +63,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        LessonsRepository.loadProgress(context = this)
         setContent {
             val navController = rememberNavController()
 
@@ -168,10 +171,11 @@ private fun HeaderSection() {
 // ==================== PROGRESS CARD ====================
 @Composable
 private fun ProgressCard() {
-    val doneThemesCount = LessonsRepository.topics.count { it.isDone }
+    val doneThemesCount = LessonsRepository.topics.count { it.topicProgress.isDone }
     val lessonDuration = 5
     val remainingTopics = LessonsRepository.topics.size - doneThemesCount
-    val doneTopicsPercent = doneThemesCount / LessonsRepository.topics.size
+    val doneTopicsPercent = doneThemesCount.toFloat() / LessonsRepository.topics.size
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -220,7 +224,7 @@ private fun ProgressCard() {
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "${doneThemesCount / LessonsRepository.topics.size * 100}%",
+                        text = "${(doneTopicsPercent * 100).toInt()}%",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         fontFamily = FontFamily.Monospace,
@@ -240,7 +244,7 @@ private fun ProgressCard() {
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(if (doneTopicsPercent == 0) 0.05f else remainingTopics.toFloat())
+                        .fillMaxWidth(if (doneTopicsPercent == 0f) 0.05f else doneTopicsPercent)
                         .height(8.dp)
                         .background(
                             brush = Brush.horizontalGradient(
@@ -299,17 +303,21 @@ private fun TopicsSection(navController: NavController, topics: List<Topic>) {
     }
 }
 
+data class TopicProgress(
+    var isDone: Boolean,
+    var isActive: Boolean
+    )
+
 data class Topic(
     val lessonData: LessonData,
-    val isDone: Boolean,
-    val isActive: Boolean,
+    val topicProgress: TopicProgress,
     val icon: Int
 )
 
 @Composable
 private fun TopicCard(topic: Topic, navController: NavController) {
-    val isDone = topic.isDone
-    val isActive = topic.isActive
+    val isDone = topic.topicProgress.isDone
+    val isActive = topic.topicProgress.isActive
 
     Card(
         modifier = Modifier.fillMaxWidth().clickable{
@@ -428,7 +436,7 @@ private fun BottomCTAButton(modifier: Modifier = Modifier, navController: NavCon
             .padding(horizontal = 20.dp, vertical = 32.dp)
     ) {
         Button(
-            onClick = { navController.navigate(Screen.Quiz.route) },
+            onClick = { navController.navigate(Screen.Quiz.createRoute(LessonsRepository.getActiveLesson())) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),

@@ -1,10 +1,21 @@
 package com.example.csharplearningapp.data
 
+import android.content.Context
+import android.content.SharedPreferences
 import com.example.csharplearningapp.R
 import com.example.csharplearningapp.Topic
 import com.example.csharplearningapp.highlightSyntax
+import com.google.gson.Gson
+import androidx.core.content.edit
+import com.example.csharplearningapp.TopicProgress
+import com.google.gson.reflect.TypeToken
 
 object LessonsRepository {
+
+    const val PROGRESS_PREFS = "progress_prefs"
+    const val PROGRESS_KEY = "progress_key"
+    val gson = Gson()
+    private lateinit var sharedPreferences: SharedPreferences
 
     val lesson1 = LessonData(
         id = 1,
@@ -535,14 +546,67 @@ class BankAccount
 
 
 
-
-    val topics = listOf(
-        Topic(lesson1, false, true, R.drawable.ic_variables),
-        Topic(lesson2, false, false, R.drawable.ic_input_output),
-        Topic(lesson3, false, false, R.drawable.ic_conditions),
-        Topic(lesson4, false, false, R.drawable.ic_loops),
-        Topic(lesson5, false, false, R.drawable.ic_arrays),
-        Topic(lesson6, false, false, R.drawable.ic_methods),
-        Topic(lesson7, false, false, R.drawable.ic_classes)
+    var topicsProgress = listOf(
+        TopicProgress(false, true),
+        TopicProgress(false, false),
+        TopicProgress(false, false),
+        TopicProgress(false, false),
+        TopicProgress(false, false),
+        TopicProgress(false, false),
+        TopicProgress(false, false),
     )
+    var topics = listOf(
+        Topic(lesson1, topicsProgress[0], R.drawable.ic_variables),
+        Topic(lesson2, topicsProgress[1], R.drawable.ic_input_output),
+        Topic(lesson3, topicsProgress[2], R.drawable.ic_conditions),
+        Topic(lesson4, topicsProgress[3], R.drawable.ic_loops),
+        Topic(lesson5, topicsProgress[4], R.drawable.ic_arrays),
+        Topic(lesson6, topicsProgress[5], R.drawable.ic_methods),
+        Topic(lesson7, topicsProgress[6], R.drawable.ic_classes)
+    )
+
+    fun completeTopic(lessonId: Int){
+        topics[lessonId - 1].topicProgress.isDone = true
+        topics[lessonId - 1].topicProgress.isActive = false
+        if ((lessonId - 1) < topics.lastIndex) topics[lessonId].topicProgress.isActive = true
+    }
+
+    fun getActiveLesson(): Int{
+        val activeTopic = topics.firstOrNull{ it.topicProgress.isActive }
+
+        return topics.indexOf(activeTopic) + 1
+    }
+
+    fun loadProgress(context: Context){
+        sharedPreferences = context.getSharedPreferences(PROGRESS_PREFS, Context.MODE_PRIVATE)
+
+        val defaultValue = gson.toJson(topicsProgress)
+
+        val topicsSaved = sharedPreferences.getString(PROGRESS_KEY, defaultValue)
+
+        val type = object : TypeToken<List<TopicProgress>>() {}.type
+
+        topicsProgress = gson.fromJson(topicsSaved, type)
+        topics = updateTopics()
+    }
+
+    fun saveProgress(){
+        val json = gson.toJson(topicsProgress)
+
+        sharedPreferences.edit {
+            putString(PROGRESS_KEY, json)
+        }
+    }
+
+    fun updateTopics(): List<Topic>{
+        return listOf(
+            Topic(lesson1, topicsProgress[0], R.drawable.ic_variables),
+            Topic(lesson2, topicsProgress[1], R.drawable.ic_input_output),
+            Topic(lesson3, topicsProgress[2], R.drawable.ic_conditions),
+            Topic(lesson4, topicsProgress[3], R.drawable.ic_loops),
+            Topic(lesson5, topicsProgress[4], R.drawable.ic_arrays),
+            Topic(lesson6, topicsProgress[5], R.drawable.ic_methods),
+            Topic(lesson7, topicsProgress[6], R.drawable.ic_classes)
+        )
+    }
 }

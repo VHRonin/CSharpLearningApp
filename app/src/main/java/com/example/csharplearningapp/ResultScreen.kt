@@ -52,11 +52,11 @@ import com.example.csharplearningapp.viewmodel.QuizViewModel
 
 @Composable
 fun ResultRoute(navController: NavController){
-    val resultState = navController.previousBackStackEntry?.savedStateHandle?.get<ResultUiState>("result") ?: ResultUiState(0, 0, "", "", "", 0)
+    val resultState = navController.previousBackStackEntry?.savedStateHandle?.get<ResultUiState>("result") ?: ResultUiState(0, 0, "", "", "", 0, 0)
 
     ResultScreen(
         resultState,
-        onRetryClick = {navController.navigate(Screen.Quiz.route)},
+        onRetryClick = {navController.navigate(Screen.Quiz.createRoute(resultState.lessonId))},
         onHomeClick = {navController.navigate(Screen.Home.route)}
     )
 }
@@ -109,7 +109,8 @@ fun ResultScreen(
                     StatCard("Точность", "${state.accuracyPercentage}%", Color(0xFF3ECF8E))
                 }
                 Box(modifier = Modifier.weight(1f)) {
-                    StatCard("Время", "${state.timeSpent} мин")
+                    val time = if(state.timeSpent.take(1).compareTo("0") == 0) "${state.timeSpent} сек" else "${state.timeSpent} мин"
+                    StatCard("Время", time)
                 }
             }
 
@@ -223,7 +224,8 @@ fun ResultPreview() {
         timeSpent = "2:45",
         title = "Отличная работа!",
         description = "Ты почти мастер в условиях C#. Еще пара повторений и теория будет отскакивать от зубов.",
-        accuracyPercentage = 80
+        accuracyPercentage = 80,
+        lessonId = 0
     )
 
     CSharpLearningAppTheme {

@@ -2,10 +2,13 @@ package com.example.csharplearningapp.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.csharplearningapp.data.LessonsRepository
+import com.example.csharplearningapp.data.QuizQuestion
 import com.example.csharplearningapp.data.QuizRepository
 import com.example.csharplearningapp.data.QuizSessionState
 import com.example.csharplearningapp.data.QuizUiState
 import com.example.csharplearningapp.data.ResultUiState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -17,10 +20,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class QuizViewModel : ViewModel() {
+class QuizViewModel(val currentLessonId: Int = 0) : ViewModel() {
+    private val questions: List<QuizQuestion> = QuizRepository.getQuizForLesson(currentLessonId)
 
-    private val questions =
-        QuizRepository.getQuizForLesson(1)
 
     private val _state =
         MutableStateFlow(
@@ -51,7 +53,8 @@ class QuizViewModel : ViewModel() {
                     List(session.questions.size) { index ->
 
                         index < session.currentQuestionIndex
-                    }
+                    },
+                timeLeft = formatTime(session.elapsedSeconds)
             )
 
         }.stateIn(
@@ -84,7 +87,7 @@ class QuizViewModel : ViewModel() {
 
                 totalQuestions = totalQuestions,
 
-                timeSpent = "2:45",
+                timeSpent = formatTime(session.elapsedSeconds),
 
                 accuracyPercentage = percentage,
 
@@ -113,7 +116,8 @@ class QuizViewModel : ViewModel() {
 
                     else ->
                         "Пока тема даётся непросто, но это нормально. Вернись к теории и попробуй пройти тест ещё раз"
-                }
+                },
+                lessonId = currentLessonId
             )
 
         }.stateIn(
@@ -126,12 +130,17 @@ class QuizViewModel : ViewModel() {
                 timeSpent = "0:00",
                 title = "",
                 description = "",
-                accuracyPercentage = 0
+                accuracyPercentage = 0,
+                lessonId = 0
             )
         )
 
     private val _navigationEvent = MutableSharedFlow<ResultUiState>()
     val navigationEvent = _navigationEvent.asSharedFlow()
+
+//    fun getQuestionsForLesson(){
+//        questions = QuizRepository.getQuizForLesson(1)
+//    }
 
     fun selectOption(optionId: String) {
 
@@ -178,6 +187,11 @@ class QuizViewModel : ViewModel() {
                 )
             }
 
+            if (resultUiState.value.accuracyPercentage >= 80){
+                LessonsRepository.completeTopic(currentLessonId)
+                LessonsRepository.saveProgress()
+            }
+
             viewModelScope.launch {
                 _navigationEvent.emit(resultUiState.value)
             }
@@ -198,5 +212,33 @@ class QuizViewModel : ViewModel() {
                 )
             }
         }
+    }
+
+
+    fun startTimer(){
+        viewModelScope.launch {
+            while (!_state.value.isQuizFinished){
+                delay(1000)
+
+                _state.update {
+                    it.copy(elapsedSeconds = it.elapsedSeconds + 1)
+                }
+            }
+        }
+    }
+
+    fun formatTime(totalSeconds: Int): String {
+
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+
+        return "%01d:%02d".format(
+            minutes,
+            seconds
+        )
+    }
+
+    init {
+        startTimer()
     }
 }

@@ -11,5 +11,6 @@ data class QuizSessionState(
     val isAnswered: Boolean = false,
 
     val correctAnswersCount: Int = 0,
-    val isQuizFinished: Boolean = false
+    val isQuizFinished: Boolean = false,
+    val elapsedSeconds: Int = 0
 )
