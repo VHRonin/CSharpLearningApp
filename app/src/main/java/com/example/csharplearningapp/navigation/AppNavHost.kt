@@ -26,40 +26,6 @@ import com.example.csharplearningapp.viewmodel.QuizViewModel
 
 @Composable
 fun AppNavHost(navController: NavHostController){
-//    val question3 = QuizQuestion(
-//        id = 3,
-//        label = "Вопрос 3",
-//        text = "Что выведет программа?",
-//        codeSnippet = buildIfElseCodeSnippet(),
-//        options = listOf(
-//            QuizOption("opt_a", "A", "\"A\""),
-//            QuizOption("opt_b", "B", "\"B\""),
-//            QuizOption("opt_c", "C", "Ничего — ошибка компиляции"),
-//            QuizOption("opt_d", "D", "\"A\" и \"B\"")
-//        ),
-//        correctOptionId = "opt_a",
-//        feedbackCorrect = "x > 5 — истина, поэтому выполняется первая ветка",
-//        feedbackWrong = "Правильный ответ: \"A\" — условие x > 5 выполняется"
-//    )
-//    // Состояние: вопрос отображен, но ответ еще не выбран
-//    val unansweredState = QuizUiState(
-//        currentQuestion = question3,
-//        selectedOptionId = null,
-//        isAnswered = false,
-//        timeLeft = "0:42",
-//        progress = listOf(true, true, false, false, false) // Первые два урока пройдены
-//    )
-
-    val mockResult = ResultUiState(
-        score = 4,
-        totalQuestions = 5,
-        timeSpent = "2:45",
-        title = "Отличная работа!",
-        description = "Ты почти мастер в условиях C#. Еще пара повторений и теория будет отскакивать от зубов.",
-        accuracyPercentage = 80,
-        lessonId = 0
-    )
-
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route
@@ -69,7 +35,6 @@ fun AppNavHost(navController: NavHostController){
         }
 
         composable(route = Screen.Quiz.route) { backStackEntry ->
-//            QuizScreen(unansweredState, {}, {}, navController)
             val lessonId = backStackEntry.arguments?.getString("lessonId")?.toIntOrNull()
 
             lessonId?.let {
@@ -78,8 +43,6 @@ fun AppNavHost(navController: NavHostController){
         }
 
         composable(route = Screen.Result.route) {
-//            ResultScreen(mockResult, onRetryClick = {navController.navigate(Screen.Quiz.route)}, onHomeClick = {navController.navigate(Screen.Home.route)})
-
             ResultRoute(navController)
         }
 
